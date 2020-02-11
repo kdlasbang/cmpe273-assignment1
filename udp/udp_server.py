@@ -4,7 +4,6 @@ import time
 UDP_IP = '127.0.0.1'
 UDP_PORT = 4001
 BUFFER_SIZE = 1024
-MESSAGE = "get 1000 lines, checking ack"
 
 def write(result,m):
         with open('output.txt',m)as ff:
@@ -46,10 +45,10 @@ def listen_forever():
             i=0
             continue
 
-        if(data.decode()=="SUCCESS!"):
+        if(data.decode()=="***SUCCESS!"):
             #after checking up, last package is completed, turn data to saver[]
-            print("SUCCESSFULLY GOT 1000 LINES FROM--",ip)
-            saver+=package[:1000]
+            print("SUCCESSFULLY GOT ",len(package)," LINES FROM--",ip)
+            saver+=package
             package=[]
             check=0
             i=0
