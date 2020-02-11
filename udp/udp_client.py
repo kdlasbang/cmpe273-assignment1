@@ -1,11 +1,13 @@
 import socket
 import time
+import math
 
 UDP_IP = '127.0.0.1'
 UDP_PORT = 4001
 BUFFER_SIZE = 1024
 upload=[]
 pkg_size=1000
+index=[]
 
 def settimeout(s,UDP_IP,UDP_PORT):
     try:
@@ -25,36 +27,37 @@ def settimeout(s,UDP_IP,UDP_PORT):
 def send():
     
     with open("upload.txt","r") as f:
-        data=f.read().splitlines()
+        db=f.read().splitlines()
 
-    for line in data:
+    for line in db:
         words=line.split(':')
         upload.append(words[1])
+        index.append(int(words[0]))
+    
 # got data from the upload.txt
     try:
         ack=0
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         i=0
         ii=0
-        
         while(i<len(upload)):
-            #print("1")
-            ack+=len(upload[i])
-            #Before I send the data, I will add up the len of this line.
-            #If this line data get lost in the transit process, the server
-            #should have one len(line) less. For example, one len(line of data)
-            # is 1, I have sent 100 lines. The 7th line is lost. For client,
-            #total nums of len(line) should be 100, while for server should be 99.
-            #Then I will resend this package again. 
+            ack+=index[i]
+            #Before I send the data, I will add up the sequence ID of a package.
+            #If one data get lost in the transit process, the sum of sequence ID
+            #between server and client should be different.
+            #For example, for package1, sum of sequence ID is 500500. 
+            # if sequence 499 get lost, the sequence ID from server will be
+            #500401. Futhermore,I don't need to set up package ID, because
+            #the sum of sequence in each package is unique. 
 
-            s.sendto(upload[i].encode(), (UDP_IP, UDP_PORT))
+            s.sendto(db[i].encode(), (UDP_IP, UDP_PORT))
             i+=1
             
             if(i%pkg_size==0 or i==len(upload)):
                 scheck=settimeout(s,UDP_IP,UDP_PORT)
                 
                 if(scheck==str(ack)):
-                    print("SUCCESSFULLY SEND ",i," LINES TO SERVER.")
+                    print("SUCCESSFULLY SENT ",math.ceil(i/pkg_size),"th PACKAGE TO SERVER.")
                     s.sendto("***SUCCESS!".encode(), (UDP_IP, UDP_PORT))
                     ack=0
                     ii=i
@@ -66,9 +69,9 @@ def send():
                     ack=0
                     continue
 
-            #I set 1000 lines as a package, for each package need to be check
-            #When the several lines less than 1000, those serveral lines can be
-            #considered as a package and need to be checked
+            #I set 1000 lines as a package.
+            #When the last several lines less than 1000,
+            #those serveral lines can be considered as a package.
 
             
         s.sendto("****DONE".encode(), (UDP_IP, UDP_PORT))

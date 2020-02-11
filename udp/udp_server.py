@@ -16,15 +16,14 @@ def write(result,m):
 def listen_forever():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind(("", UDP_PORT))
-    package=[]    #I set that one package can load 1000 lines
+    package=[]    
     saver=[]      #saver save all the data then load into txt
-    check=0       #check used to check the len of each line, check whether
-                  #the data have been modifed in the transit process
-    i=0           #index of line
+    check=0       #check used to check the sum of sequence in a package,
+                  #check whether the data have been lost in the transit process
     while True:
         # get the data sent to us
         data, ip = s.recvfrom(BUFFER_SIZE)
-
+        
         if(data.decode()=="****DONE"):
             write(saver,'a')
             print("FINISH GETTING ",len(saver)," DATA FROM {}".format(ip))
@@ -42,7 +41,6 @@ def listen_forever():
             print("Data Lost or been Modified,Begin Receiving Last Package.")
             package=[]
             check=0
-            i=0
             continue
 
         if(data.decode()=="***SUCCESS!"):
@@ -51,12 +49,11 @@ def listen_forever():
             saver+=package
             package=[]
             check=0
-            i=0
             continue
         
-        package.append(data.decode(encoding="utf-8"))
-        check+=len(package[i])
-        i+=1
+        words=data.decode().split(':')
+        package.append(words[1])
+        check+=int(words[0])
 
         
 listen_forever()
