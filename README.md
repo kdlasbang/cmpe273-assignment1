@@ -6,8 +6,9 @@ For tcp part A:
 
 
 FOR UDP PART B:
-  Comparing to the Requirement, I use a different method for lost detection and reliable message delivery. 
-  The txt have 10000 lines, after reading the file, I set 1000 lines as a package. After each package sent, I will count the total len(line). If one line is lost, the total len(line) should be different between client and server. Then the client will send the same package again. 
-  If the total lines of a file is 10050, then the left of 50 lines will count as a package as well.
+  I set 1000(default, but I can change) lines as a package. After each package sent, I will count the total len(line). If one line is lost, the total len(line) should be different between client and server. If the client detect that the total nums of len(line) are different, the client will send the same package again until they got the same number.  
+
+  Example: in the package 1, it should have line 1-1000. If line 59 lost. The total len(line) of server should be total len(line1 to line1000) - len(line59). However, for the client, the total len(line) still len(line1 to line1000). At this time, client will send the same package1 to the server again. Until they have the same amount. 
+
+  I set up timeout alert that, if client still not received response from server, after setting seconds, the client will resend the message to server and wait for the response. (client will keep sending per several seconds until it get the response from server)
   
-  Example: in the package 1, it should have line 1-1000. If line 59 lost. The total len(line) of server should be total len(line1 to line1000) - len(line59). However, for the client, the total len(line) still len(line1 to line1000). At this time, client will send the same package to the server again. Until they have the same amount. 
