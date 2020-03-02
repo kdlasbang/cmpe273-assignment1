@@ -1,0 +1,5 @@
+python3 udp_server.py
+
+Server started at port4000.
+Accepting a file upload...
+Upload successfully completed.

@@ -3,6 +3,7 @@ import time
 import math
 
 output = open("udp_client_out.txt", "w")
+output.write("python3 udp_client.py\n\n")
 
 UDP_IP = '127.0.0.1'
 UDP_PORT = 4000

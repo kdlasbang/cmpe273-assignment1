@@ -2,6 +2,7 @@ import socket
 import time
 
 output = open("udp_sever_out.txt", "w")
+output.write("python3 udp_server.py\n\n")
 
 UDP_IP = '127.0.0.1'
 UDP_PORT = 4000
@@ -26,8 +27,6 @@ def listen_forever():
     print("Server started at port",UDP_PORT,".")
     output.write("Server started at port"+str(UDP_PORT)+".\n")
     
-    ttt=0
-
     while True:
         # get the data sent to us
         data, ip = s.recvfrom(BUFFER_SIZE)
@@ -46,10 +45,6 @@ def listen_forever():
             continue
 
         if(data.decode()=="***CHECK"):
-            if(ttt==0):
-                ttt=1
-                continue
-            
             # reply check num to the client
             cc=str(check)
             s.sendto(cc.encode(), ip)
