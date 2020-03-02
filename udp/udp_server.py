@@ -1,12 +1,14 @@
 import socket
 import time
 
+output = open("udp_sever_out.txt", "w")
+
 UDP_IP = '127.0.0.1'
-UDP_PORT = 4001
+UDP_PORT = 4000
 BUFFER_SIZE = 1024
 
 def write(result,m):
-        with open('output.txt',m)as ff:
+        with open('data.txt',m)as ff:
                 for obj in result:
                         ff.write('%s\n' % obj)
 
@@ -14,23 +16,40 @@ def write(result,m):
 #this is also helpful for me to check the complete data
 
 def listen_forever():
+    observer=0
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind(("", UDP_PORT))
     package=[]    
     saver=[]      #saver save all the data then load into txt
     check=0       #check used to check the sum of sequence in a package,
                   #check whether the data have been lost in the transit process
+    print("Server started at port",UDP_PORT,".")
+    output.write("Server started at port"+str(UDP_PORT)+".\n")
+    
+    ttt=0
+
     while True:
         # get the data sent to us
         data, ip = s.recvfrom(BUFFER_SIZE)
+        if(observer==0):
+            print("Accepting a file upload...")
+            output.write("Accepting a file upload...\n")
+            observer=observer+1
+        
         
         if(data.decode()=="****DONE"):
             write(saver,'a')
-            print("FINISH GETTING ",len(saver)," DATA FROM {}".format(ip))
+            print("Upload successfully completed.")
+            output.write("Upload successfully completed.\n")
             saver=[]
+            observer=0
             continue
 
         if(data.decode()=="***CHECK"):
+            if(ttt==0):
+                ttt=1
+                continue
+            
             # reply check num to the client
             cc=str(check)
             s.sendto(cc.encode(), ip)
@@ -38,14 +57,12 @@ def listen_forever():
 
         if(data.decode()=="***RESEND!"):
             # got the message from client that last package need to be resent
-            print("Data Lost or been Modified,Begin Receiving Last Package.")
             package=[]
             check=0
             continue
 
         if(data.decode()=="***SUCCESS!"):
             #after checking up, last package is completed, turn data to saver[]
-            print("SUCCESSFULLY GOT ",len(package)," LINES FROM--",ip)
             saver+=package
             package=[]
             check=0
@@ -57,3 +74,4 @@ def listen_forever():
 
         
 listen_forever()
+output.close()

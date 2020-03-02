@@ -2,8 +2,10 @@ import socket
 import time
 import math
 
+output = open("udp_client_out.txt", "w")
+
 UDP_IP = '127.0.0.1'
-UDP_PORT = 4001
+UDP_PORT = 4000
 BUFFER_SIZE = 1024
 upload=[]
 pkg_size=1000
@@ -19,7 +21,7 @@ def settimeout(s,UDP_IP,UDP_PORT):
         s.settimeout(None)
         return data.decode()
     except socket.timeout:
-        print("timeout,re-ask for the ack")
+        #print("timeout,re-ask for the ack")
         settimeout(s,UDP_IP,UDP_PORT)
 
 
@@ -38,8 +40,13 @@ def send():
     try:
         ack=0
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        print("Connected to the server.")
+        output.write("Connected to the server.\n")
+        print("Starting a file (upload.txt) upload...")
+        output.write("Starting a file (upload.txt) upload...\n")
         i=0
         ii=0
+
         while(i<len(upload)):
             ack+=index[i]
             #Before I send the data, I will add up the sequence ID of a package.
@@ -50,6 +57,7 @@ def send():
             #500401. Futhermore,I don't need to set up package ID, because
             #the sum of sequence in each package is unique. 
 
+
             s.sendto(db[i].encode(), (UDP_IP, UDP_PORT))
             i+=1
             
@@ -57,13 +65,15 @@ def send():
                 scheck=settimeout(s,UDP_IP,UDP_PORT)
                 
                 if(scheck==str(ack)):
-                    print("SUCCESSFULLY SENT ",math.ceil(i/pkg_size),"th PACKAGE TO SERVER.")
+                    strack="Received ack("+str(math.ceil(i/pkg_size))+") from the server."
+                    print(strack)
+                    output.write(strack+"\n")
                     s.sendto("***SUCCESS!".encode(), (UDP_IP, UDP_PORT))
                     ack=0
                     ii=i
                     continue
                 else:
-                    print("PACKAGE LOSE DETECT, RESEND LAST PKG.")
+                    #print("PACKAGE LOSE DETECT, RESEND LAST PKG.")
                     s.sendto("***RESEND!".encode(), (UDP_IP, UDP_PORT))
                     i=ii
                     ack=0
@@ -75,14 +85,16 @@ def send():
 
             
         s.sendto("****DONE".encode(), (UDP_IP, UDP_PORT))
-        print("FINISH SENDING DATA TO--{}: {} LINES.".format(UDP_IP, i))
-        print("CLOSED CONNECTION")
+        print("File upload successfully completed.")
+        output.write("File upload successfully completed.\n")
 
         
     except socket.error:
         print("Error! {}".format(socket.error))
+        output.write("Error! {}".format(socket.error))
         exit()
 
 
 
 send()
+output.close()
